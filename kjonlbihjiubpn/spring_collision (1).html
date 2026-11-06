@@ -1,0 +1,630 @@
+html_content = """<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Two Masses Collide After a Quarter Pipe Simulation</title>
+    <!-- FontAwesome for Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        :root {
+            --bg-color: #f8fafc;
+            --card-bg: #ffffff;
+            --text-color: #0f172a;
+            --text-muted: #64748b;
+            --accent-color: #0284c7;
+            --accent-light: #e0f2fe;
+            --border-color: #e2e8f0;
+            --shadow-sm: 0 1px 3px rgba(0,0,0,0.1);
+            --shadow-md: 0 10px 25px -5px rgba(0, 0, 0, 0.05);
+        }
+
+        body {
+            margin: 0;
+            padding: 24px;
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            min-height: 100vh;
+        }
+
+        h1 {
+            margin: 0 0 6px 0;
+            font-size: 1.6rem;
+            text-align: center;
+            color: var(--accent-color);
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .subtitle {
+            font-size: 0.95rem;
+            color: var(--text-muted);
+            margin-bottom: 24px;
+            text-align: center;
+        }
+
+        .main-container {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 24px;
+            max-width: 1150px;
+            width: 100%;
+            justify-content: center;
+        }
+
+        .canvas-container {
+            background-color: var(--card-bg);
+            border-radius: 16px;
+            padding: 20px;
+            border: 1px solid var(--border-color);
+            box-shadow: var(--shadow-md);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            flex: 1;
+            min-width: 320px;
+        }
+
+        canvas {
+            background: #ffffff;
+            border-radius: 12px;
+            border: 1px solid var(--border-color);
+            max-width: 100%;
+            height: auto;
+        }
+
+        .controls-container {
+            background-color: var(--card-bg);
+            border-radius: 16px;
+            padding: 24px;
+            width: 340px;
+            border: 1px solid var(--border-color);
+            box-shadow: var(--shadow-md);
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+        }
+
+        .controls-header {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 1.1rem;
+            font-weight: 700;
+            color: var(--text-color);
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 12px;
+            margin: 0;
+        }
+
+        .control-group {
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+        }
+
+        .control-group label {
+            font-size: 0.85rem;
+            color: var(--text-color);
+            font-weight: 600;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .badge {
+            background-color: var(--accent-light);
+            color: var(--accent-color);
+            padding: 2px 8px;
+            border-radius: 6px;
+            font-size: 0.8rem;
+            font-weight: 700;
+        }
+
+        input[type="range"] {
+            width: 100%;
+            accent-color: var(--accent-color);
+            cursor: pointer;
+            height: 6px;
+            background: #e2e8f0;
+            border-radius: 3px;
+        }
+
+        .btn-container {
+            display: flex;
+            gap: 10px;
+            margin-top: 8px;
+        }
+
+        button {
+            flex: 1;
+            padding: 10px 14px;
+            border: none;
+            border-radius: 8px;
+            font-weight: 600;
+            font-size: 0.9rem;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 6px;
+        }
+
+        #btn-start {
+            background-color: #10b981;
+            color: white;
+        }
+        #btn-start:hover { background-color: #059669; }
+
+        #btn-pause {
+            background-color: #f59e0b;
+            color: white;
+        }
+        #btn-pause:hover { background-color: #d97706; }
+
+        #btn-reset {
+            background-color: #ef4444;
+            color: white;
+        }
+        #btn-reset:hover { background-color: #dc2626; }
+
+        .stats-panel {
+            background-color: #f1f5f9;
+            border-radius: 10px;
+            padding: 14px;
+            border: 1px solid var(--border-color);
+            font-size: 0.85rem;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .stat-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            color: var(--text-color);
+        }
+
+        .stat-value {
+            font-weight: 700;
+            font-family: monospace;
+            font-size: 0.9rem;
+        }
+    </style>
+</head>
+<body>
+
+    <h1><i class="fa-solid fa-atom"></i> Two Masses Collide After a Quarter Pipe</h1>
+    <div class="subtitle">จำลองการเคลื่อนที่ มวลไถลลงรางโค้ง ชนกัน และอัดสปริง (ระบบธีมสว่าง)</div>
+
+    <div class="main-container">
+        <!-- Canvas แสดงภาพจำลอง -->
+        <div class="canvas-container">
+            <canvas id="simCanvas" width="720" height="360"></canvas>
+            <div style="margin-top: 14px; font-size: 0.85rem; color: var(--text-muted); text-align: center; display: flex; align-items: center; gap: 6px;">
+                <i class="fa-regular fa-lightbulb" style="color: #f59e0b;"></i> เคล็ดลับ: ปรับค่าตัวแปรทางขวาแล้วกดปุ่ม "เริ่มใหม่" เพื่อดูผลลัพธ์ทันที
+            </div>
+        </div>
+
+        <!-- แผงควบคุมค่าพารามิเตอร์ -->
+        <div class="controls-container">
+            <div class="controls-header">
+                <i class="fa-solid fa-sliders"></i> ปรับแต่งค่าพารามิเตอร์
+            </div>
+            
+            <div class="control-group">
+                <label>มวลก้อนที่ 1 (m₁): <span class="badge" id="val-m1">2.0 kg</span></label>
+                <input type="range" id="m1" min="0.5" max="10" step="0.1" value="2.0">
+            </div>
+
+            <div class="control-group">
+                <label>มวลก้อนที่ 2 (m₂): <span class="badge" id="val-m2">3.0 kg</span></label>
+                <input type="range" id="m2" min="0.5" max="10" step="0.1" value="3.0">
+            </div>
+
+            <div class="control-group">
+                <label>ความสูงเริ่มต้น (h): <span class="badge" id="val-h">2.0 m</span></label>
+                <input type="range" id="h" min="0.5" max="4.0" step="0.1" value="2.0">
+            </div>
+
+            <div class="control-group">
+                <label>สัมประสิทธิ์ความเสียดทาน (μ): <span class="badge" id="val-mu">0.10</span></label>
+                <input type="range" id="mu" min="0.0" max="0.5" step="0.01" value="0.10">
+            </div>
+
+            <div class="control-group">
+                <label>สัมประสิทธิ์การสะท้อน (e): <span class="badge" id="val-e">0.80</span></label>
+                <input type="range" id="e" min="0.0" max="1.0" step="0.05" value="0.80">
+            </div>
+
+            <div class="control-group">
+                <label>ค่าคงตัวสปริง (k): <span class="badge" id="val-k">200 N/m</span></label>
+                <input type="range" id="k" min="50" max="800" step="10" value="200">
+            </div>
+
+            <div class="btn-container">
+                <button id="btn-start"><i class="fa-solid fa-play"></i> เล่น</button>
+                <button id="btn-pause"><i class="fa-solid fa-pause"></i> พัก</button>
+                <button id="btn-reset"><i class="fa-solid fa-rotate-right"></i> เริ่มใหม่</button>
+            </div>
+
+            <div class="stats-panel">
+                <div class="stat-row">
+                    <span><i class="fa-solid fa-info-circle"></i> สถานะ:</span>
+                    <span class="stat-value" id="st-phase" style="color: var(--accent-color)">พร้อม</span>
+                </div>
+                <div class="stat-row">
+                    <span><i class="fa-solid fa-gauge-high"></i> ความเร็วมวล 1 (v₁):</span>
+                    <span class="stat-value" id="st-v1">0.00 m/s</span>
+                </div>
+                <div class="stat-row">
+                    <span><i class="fa-solid fa-gauge-high"></i> ความเร็วมวล 2 (v₂):</span>
+                    <span class="stat-value" id="st-v2">0.00 m/s</span>
+                </div>
+                <div class="stat-row">
+                    <span><i class="fa-solid fa-compress"></i> การหดตัวสปริง (x):</span>
+                    <span class="stat-value" id="st-spring">0.00 m</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const canvas = document.getElementById('simCanvas');
+        const ctx = canvas.getContext('2d');
+
+        // UI Controls
+        const inputM1 = document.getElementById('m1');
+        const inputM2 = document.getElementById('m2');
+        const inputH  = document.getElementById('h');
+        const inputMu = document.getElementById('mu');
+        const inputE  = document.getElementById('e');
+        const inputK  = document.getElementById('k');
+
+        const valM1 = document.getElementById('val-m1');
+        const valM2 = document.getElementById('val-m2');
+        const valH  = document.getElementById('val-h');
+        const valMu = document.getElementById('val-mu');
+        const valE  = document.getElementById('val-e');
+        const valK  = document.getElementById('val-k');
+
+        const stPhase  = document.getElementById('st-phase');
+        const stV1     = document.getElementById('st-v1');
+        const stV2     = document.getElementById('st-v2');
+        const stSpring = document.getElementById('st-spring');
+
+        // Physics Parameters
+        const scale = 50; 
+        const g = 9.81;
+
+        let m1, m2, h0, mu, e, k;
+        let theta1;
+        let v1_ang = 0;
+        let x1, v1 = 0;
+        let x2, v2 = 0;
+        let springRestX = 11.5;
+        let springLength = 2.0;
+        
+        let phase = 'READY';
+        let isRunning = false;
+        let animationFrameId = null;
+        let lastTime = 0;
+
+        const R = 2.5;
+        const trackEndX = 3.0;
+
+        function readInputs() {
+            m1 = parseFloat(inputM1.value);
+            m2 = parseFloat(inputM2.value);
+            h0 = parseFloat(inputH.value);
+            mu = parseFloat(inputMu.value);
+            e  = parseFloat(inputE.value);
+            k  = parseFloat(inputK.value);
+
+            valM1.innerText = m1.toFixed(1) + ' kg';
+            valM2.innerText = m2.toFixed(1) + ' kg';
+            valH.innerText  = h0.toFixed(1) + ' m';
+            valMu.innerText = mu.toFixed(2);
+            valE.innerText  = e.toFixed(2);
+            valK.innerText  = k.toFixed(0) + ' N/m';
+        }
+
+        function initSimulation() {
+            readInputs();
+            
+            let effectiveH = Math.min(h0, R);
+            theta1 = Math.acos(Math.max(0, 1 - effectiveH / R));
+            v1_ang = 0;
+
+            x1 = trackEndX - R * Math.sin(theta1);
+            v1 = 0;
+
+            x2 = 6.2;
+            v2 = 0;
+
+            phase = 'READY';
+            stPhase.innerText = 'พร้อม';
+            stV1.innerText = '0.00 m/s';
+            stV2.innerText = '0.00 m/s';
+            stSpring.innerText = '0.00 m';
+
+            draw();
+        }
+
+        document.getElementById('btn-start').addEventListener('click', () => {
+            if (phase === 'FINISHED') {
+                initSimulation();
+            }
+            if (!isRunning) {
+                isRunning = true;
+                lastTime = performance.now();
+                animationFrameId = requestAnimationFrame(update);
+            }
+        });
+
+        document.getElementById('btn-pause').addEventListener('click', () => {
+            isRunning = false;
+            if (animationFrameId) cancelAnimationFrame(animationFrameId);
+        });
+
+        document.getElementById('btn-reset').addEventListener('click', () => {
+            isRunning = false;
+            if (animationFrameId) cancelAnimationFrame(animationFrameId);
+            initSimulation();
+        });
+
+        [inputM1, inputM2, inputH, inputMu, inputE, inputK].forEach(input => {
+            input.addEventListener('input', () => {
+                readInputs();
+                if (!isRunning) {
+                    initSimulation();
+                }
+            });
+        });
+
+        function update(currentTime) {
+            if (!isRunning) return;
+
+            let dt = (currentTime - lastTime) / 1000;
+            if (dt > 0.05) dt = 0.05;
+            lastTime = currentTime;
+
+            let subSteps = 10;
+            let subDt = dt / subSteps;
+
+            const size1 = 0.5;
+            const size2 = 0.5;
+
+            for (let step = 0; step < subSteps; step++) {
+                if (phase === 'READY') {
+                    phase = 'ON_PIPE';
+                }
+
+                if (phase === 'ON_PIPE') {
+                    stPhase.innerText = 'กำลังไถลลงราง';
+                    
+                    let netAccel = g * (Math.sin(theta1) - mu * Math.cos(theta1));
+                    let alpha = netAccel / R;
+                    if (alpha < 0 && theta1 <= 0) alpha = 0;
+
+                    v1_ang += alpha * subDt;
+                    theta1 -= v1_ang * subDt;
+
+                    if (theta1 <= 0) {
+                        theta1 = 0;
+                        v1 = v1_ang * R;
+                        x1 = trackEndX;
+                        phase = 'ON_FLAT';
+                    } else {
+                        x1 = trackEndX - R * Math.sin(theta1);
+                        v1 = v1_ang * R;
+                    }
+                } 
+                else if (phase === 'ON_FLAT') {
+                    stPhase.innerText = 'เคลื่อนที่บนพื้นราบ';
+
+                    if (v1 > 0) {
+                        v1 -= mu * g * subDt;
+                        if (v1 < 0) v1 = 0;
+                    }
+                    if (v2 > 0) {
+                        v2 -= mu * g * subDt;
+                        if (v2 < 0) v2 = 0;
+                    }
+
+                    x1 += v1 * subDt;
+                    x2 += v2 * subDt;
+
+                    if (x1 + size1 >= x2) {
+                        x1 = x2 - size1; 
+                        
+                        let u1 = v1;
+                        let u2 = v2;
+
+                        v1 = ((m1 - e * m2) * u1 + (1 + e) * m2 * u2) / (m1 + m2);
+                        v2 = ((m2 - e * m1) * u2 + (1 + e) * m1 * u1) / (m1 + m2);
+
+                        phase = 'COMPRESSING';
+                    }
+                }
+                else if (phase === 'COMPRESSING') {
+                    stPhase.innerText = 'อัดสปริง / เคลื่อนที่หลังชน';
+
+                    if (v1 > 0) {
+                        v1 -= mu * g * subDt;
+                        if (v1 < 0) v1 = 0;
+                    } else if (v1 < 0) {
+                        v1 += mu * g * subDt;
+                        if (v1 > 0) v1 = 0;
+                    }
+
+                    let springPlateX = springRestX - springLength;
+                    let compression = (x2 + size2) - springPlateX;
+
+                    if (compression > 0) {
+                        let F_spring = -k * compression;
+                        let F_friction = (v2 > 0) ? -mu * m2 * g : ((v2 < 0) ? mu * m2 * g : 0);
+                        let a2 = (F_spring + F_friction) / m2;
+
+                        v2 += a2 * subDt;
+                        stSpring.innerText = compression.toFixed(2) + ' m';
+                    } else {
+                        stSpring.innerText = '0.00 m';
+                        if (v2 > 0) {
+                            v2 -= mu * g * subDt;
+                            if (v2 < 0) v2 = 0;
+                        } else if (v2 < 0) {
+                            v2 += mu * g * subDt;
+                            if (v2 > 0) v2 = 0;
+                        }
+                    }
+
+                    x1 += v1 * subDt;
+                    x2 += v2 * subDt;
+
+                    if (x1 + size1 > x2 && v1 > v2) {
+                        x1 = x2 - size1;
+                        let u1 = v1, u2 = v2;
+                        v1 = ((m1 - e * m2) * u1 + (1 + e) * m2 * u2) / (m1 + m2);
+                        v2 = ((m2 - e * m1) * u2 + (1 + e) * m1 * u1) / (m1 + m2);
+                    }
+
+                    if (Math.abs(v1) < 0.01 && Math.abs(v2) < 0.01 && compression <= 0.001) {
+                        v1 = 0;
+                        v2 = 0;
+                        phase = 'FINISHED';
+                        stPhase.innerText = 'สิ้นสุดการจำลอง';
+                    }
+                }
+            }
+
+            stV1.innerText = v1.toFixed(2) + ' m/s';
+            stV2.innerText = v2.toFixed(2) + ' m/s';
+
+            draw();
+
+            if (isRunning) {
+                animationFrameId = requestAnimationFrame(update);
+            }
+        }
+
+        function draw() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+            const originX = 40;
+            const originY = 290;
+
+            function toCanvasX(xm) { return originX + xm * scale; }
+            function toCanvasY(ym) { return originY - ym * scale; }
+
+            // 1. วาดเส้นตารางเบาๆ (Grid Lines)
+            ctx.strokeStyle = '#f1f5f9';
+            ctx.lineWidth = 1;
+            for (let x = 0; x < canvas.width; x += 25) {
+                ctx.beginPath();
+                ctx.moveTo(x, 0);
+                ctx.lineTo(x, canvas.height);
+                ctx.stroke();
+            }
+
+            // 2. วาดพื้นราบ (Ground)
+            ctx.strokeStyle = '#94a3b8';
+            ctx.lineWidth = 4;
+            ctx.beginPath();
+            ctx.moveTo(toCanvasX(0), toCanvasY(0));
+            ctx.lineTo(toCanvasX(13.5), toCanvasY(0));
+            ctx.stroke();
+
+            // 3. วาดรางโค้ง (Quarter Pipe)
+            ctx.beginPath();
+            ctx.strokeStyle = '#0284c7';
+            ctx.lineWidth = 5;
+            for (let a = Math.PI / 2; a >= 0; a -= 0.02) {
+                let xm = trackEndX - R * Math.sin(a);
+                let ym = R - R * Math.cos(a);
+                let cx = toCanvasX(xm);
+                let cy = toCanvasY(ym);
+                if (a === Math.PI / 2) ctx.moveTo(cx, cy);
+                else ctx.lineTo(cx, cy);
+            }
+            ctx.stroke();
+
+            // 4. วาดผนังและสปริง
+            ctx.fillStyle = '#64748b';
+            ctx.fillRect(toCanvasX(springRestX), toCanvasY(1.8), 16, 90);
+
+            let springWallX = toCanvasX(springRestX);
+            let size2 = 0.5;
+            let m2RightX = toCanvasX(x2 + size2);
+            let currentSpringLeftX = Math.min(toCanvasX(springRestX - springLength), m2RightX);
+
+            ctx.strokeStyle = '#d97706';
+            ctx.lineWidth = 3;
+            ctx.beginPath();
+            let coils = 10;
+            let springWidth = springWallX - currentSpringLeftX;
+            let stepPx = springWidth / (coils * 2);
+            let springY = toCanvasY(0.25);
+
+            ctx.moveTo(currentSpringLeftX, springY);
+            for (let i = 0; i <= coils * 2; i++) {
+                let sx = currentSpringLeftX + i * stepPx;
+                let sy = springY + (i % 2 === 0 ? -10 : 10);
+                if (i === 0 || i === coils * 2) sy = springY;
+                ctx.lineTo(sx, sy);
+            }
+            ctx.stroke();
+
+            // 5. วาดมวล 1 (m1 - สีเขียวสว่าง)
+            let size1Px = 0.5 * scale;
+            let y1_m = (phase === 'ON_PIPE') ? (R - R * Math.cos(theta1)) : 0;
+            let cx1 = toCanvasX(x1);
+            let cy1 = toCanvasY(y1_m + 0.5);
+
+            ctx.fillStyle = '#10b981';
+            ctx.beginPath();
+            ctx.roundRect(cx1, cy1, size1Px, size1Px, 8);
+            ctx.fill();
+            ctx.strokeStyle = '#047857';
+            ctx.lineWidth = 2;
+            ctx.stroke();
+
+            ctx.fillStyle = '#ffffff';
+            ctx.font = 'bold 12px sans-serif';
+            ctx.textAlign = 'center';
+            ctx.fillText(`m₁ (${m1}kg)`, cx1 + size1Px / 2, cy1 + size1Px / 2 + 4);
+
+            // 6. วาดมวล 2 (m2 - สีฟ้าสว่าง)
+            let size2Px = 0.5 * scale;
+            let cx2 = toCanvasX(x2);
+            let cy2 = toCanvasY(0.5);
+
+            ctx.fillStyle = '#0284c7';
+            ctx.beginPath();
+            ctx.roundRect(cx2, cy2, size2Px, size2Px, 8);
+            ctx.fill();
+            ctx.strokeStyle = '#0369a1';
+            ctx.lineWidth = 2;
+            ctx.stroke();
+
+            ctx.fillStyle = '#ffffff';
+            ctx.fillText(`m₂ (${m2}kg)`, cx2 + size2Px / 2, cy2 + size2Px / 2 + 4);
+        }
+
+        initSimulation();
+    </script>
+</body>
+</html>
+"""
+
+with open("physics_simulation_light.html", "w", encoding="utf-8") as f:
+    f.write(html_content)
+
+print("FILE_CREATED: physics_simulation_light.html")
